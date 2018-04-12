@@ -125,7 +125,7 @@ namespace IdentityServer4.Quickstart.UI
         /// <summary>
         /// initiate roundtrip to external authentication provider
         /// </summary>
-        [HttpGet]
+        [HttpGet]   
         public async Task<IActionResult> ExternalLogin(string provider, string returnUrl)
         {
             if (AccountOptions.WindowsAuthenticationSchemeName == provider)
