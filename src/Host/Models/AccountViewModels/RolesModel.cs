@@ -7,8 +7,8 @@ namespace Host.Models.AccountViewModels
 {
     public class RolesModel
     {
-        public int RoleId { get; set; }
+        public string RoleId { get; set; }
         public string Name { get; set; }
-        public int MyProperty { get; set; }
+        public string NormalizedName { get; set; }
     }
 }

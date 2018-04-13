@@ -134,6 +134,7 @@ namespace IdentityServer4.Quickstart.UI
 
         }
 
+
         /// <summary>
         /// Show login page
         /// </summary>
@@ -194,11 +195,11 @@ namespace IdentityServer4.Quickstart.UI
                     if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))
                     {
                         //return Redirect(model.ReturnUrl);
-                        return RedirectToAction("SignUp", "Home");
+                        return RedirectToAction("AdminDashboard", "Home");
                     }
 
                     //return Redirect("~/");
-                    return RedirectToAction("SignUp" ,"Home");
+                    return RedirectToAction("AdminDashboard", "Home");
                 }
 
                 await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials"));
@@ -342,7 +343,7 @@ namespace IdentityServer4.Quickstart.UI
                 return SignOut(new AuthenticationProperties { RedirectUri = url }, vm.ExternalAuthenticationScheme);
             }
 
-            return View("LoggedOut", vm);
+            return RedirectToAction("Sign" , "Home");
         }
 
         /*****************************************/

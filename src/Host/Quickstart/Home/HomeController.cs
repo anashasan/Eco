@@ -3,6 +3,7 @@
 
 
 using IdentityServer4.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -28,9 +29,10 @@ namespace IdentityServer4.Quickstart.UI
             return View("Sign");
         }
 
-        public IActionResult SignUp()
+        [Authorize]
+        public IActionResult AdminDashboard()
         {
-            return View("SignUp");
+            return View("AdminDashboard");
         }
 
         public IActionResult RoleView()
