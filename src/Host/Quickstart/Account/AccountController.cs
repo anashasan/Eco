@@ -19,6 +19,11 @@ using System.Linq;
 using System;
 using System.Collections.Generic;
 using Host.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using Host.Data;
+using Microsoft.AspNetCore.Authorization;
+using Host.Models.AccountViewModels;
 
 namespace IdentityServer4.Quickstart.UI
 {
@@ -31,6 +36,7 @@ namespace IdentityServer4.Quickstart.UI
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
+        private readonly IServiceProvider _serviceProvider;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -38,7 +44,8 @@ namespace IdentityServer4.Quickstart.UI
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
-            IEventService events)
+            IEventService events,
+            IServiceProvider serviceProvider)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -46,6 +53,85 @@ namespace IdentityServer4.Quickstart.UI
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
+            _serviceProvider = serviceProvider;
+        }
+
+        /// <summary>
+        /// Create New User
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        [HttpPost]
+        public async Task<IActionResult> CreateUser(Host.Models.AccountViewModels.UserInfoModel user)
+        {
+            if (!ModelState.IsValid)
+                return null;
+            using (var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            {
+                var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+                context.Database.Migrate();
+                var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var userEmail = userMgr.FindByEmailAsync(user.Email).Result;
+                if (userEmail == null)
+                {
+                    var userName = new ApplicationUser
+                    {
+                        UserName = user.UserName,
+                        Email = user.Email
+                    };
+                    var result = userMgr.CreateAsync(userName, user.Password).Result;
+                    if (!result.Succeeded)
+                    {
+                        throw new Exception(result.Errors.First().Description);
+                    }
+
+                    result = userMgr.AddClaimsAsync(userName, new Claim[]{
+                        new Claim(JwtClaimTypes.Name, user.UserName),
+                        new Claim(JwtClaimTypes.GivenName, user.UserName),
+                        new Claim(JwtClaimTypes.FamilyName, user.UserName),
+                        new Claim(JwtClaimTypes.Email, user.Email),
+                        new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
+                        new Claim(JwtClaimTypes.WebSite, "http://alice.com"),
+                        new Claim(JwtClaimTypes.Address, @"{ 'street_address': 'One Hacker Way', 'locality': 'Heidelberg', 'postal_code': 69118, 'country': 'Germany' }", IdentityServer4.IdentityServerConstants.ClaimValueTypes.Json)
+                    }).Result;
+                    if (!result.Succeeded)
+                    {
+                        throw new Exception(result.Errors.First().Description);
+                    }
+                    Console.WriteLine("User Created");
+                }
+                return View();
+            }
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateRoles(RolesModel rolesModel)
+        {
+            if (!ModelState.IsValid)
+                return RedirectToAction("Home/SignUp");
+            var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
+            var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+
+            var roleName = context.Roles
+                           .AsNoTracking()
+                           .Where(i => i.Name == rolesModel.Name)
+                           .Single();
+            if(roleName == null)
+            {
+                var roles = new IdentityRole
+                {
+                    Name = rolesModel.Name,
+                };
+
+
+                context.Roles.Add(roles);
+                context.SaveChanges();
+                return RedirectToAction("Home/SignUp");
+            }
+            return RedirectToAction("Home/SignUp");
+
         }
 
         /// <summary>
@@ -73,26 +159,27 @@ namespace IdentityServer4.Quickstart.UI
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginInputModel model, string button)
         {
-            if (button != "login")
-            {
-                // the user clicked the "cancel" button
-                var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
-                if (context != null)
-                {
-                    // if the user cancels, send a result back into IdentityServer as if they 
-                    // denied the consent (even if this client does not require consent).
-                    // this will send back an access denied OIDC error response to the client.
-                    await _interaction.GrantConsentAsync(context, ConsentResponse.Denied);
-                    
-                    // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                    return Redirect(model.ReturnUrl);
-                }
-                else
-                {
-                    // since we don't have a valid context, then we just go back to the home page
-                    return Redirect("~/");
-                }
-            }
+            //if (button != "login")
+            //{
+            //    // the user clicked the "cancel" button
+            //    var context = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
+            //    if (context != null)
+            //    {
+            //        // if the user cancels, send a result back into IdentityServer as if they 
+            //        // denied the consent (even if this client does not require consent).
+            //        // this will send back an access denied OIDC error response to the client.
+            //        await _interaction.GrantConsentAsync(context, ConsentResponse.Denied);
+
+            //        // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+            //        //return Redirect(model.ReturnUrl);
+            //        return RedirectToAction("Home/SignUp");
+            //    }
+            //    else
+            //    {
+            //        // since we don't have a valid context, then we just go back to the home page
+            //        return Redirect("~/");
+            //    }
+            //}
 
             if (ModelState.IsValid)
             {
@@ -106,10 +193,12 @@ namespace IdentityServer4.Quickstart.UI
                     // the IsLocalUrl check is only necessary if you want to support additional local pages, otherwise IsValidReturnUrl is more strict
                     if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))
                     {
-                        return Redirect(model.ReturnUrl);
+                        //return Redirect(model.ReturnUrl);
+                        return RedirectToAction("SignUp", "Home");
                     }
 
-                    return Redirect("~/");
+                    //return Redirect("~/");
+                    return RedirectToAction("SignUp" ,"Home");
                 }
 
                 await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials"));
@@ -125,7 +214,7 @@ namespace IdentityServer4.Quickstart.UI
         /// <summary>
         /// initiate roundtrip to external authentication provider
         /// </summary>
-        [HttpGet]   
+        [HttpGet]
         public async Task<IActionResult> ExternalLogin(string provider, string returnUrl)
         {
             if (AccountOptions.WindowsAuthenticationSchemeName == provider)
@@ -428,7 +517,7 @@ namespace IdentityServer4.Quickstart.UI
             }
         }
 
-        private async Task<(ApplicationUser user, string provider, string providerUserId, IEnumerable<Claim> claims)> 
+        private async Task<(ApplicationUser user, string provider, string providerUserId, IEnumerable<Claim> claims)>
             FindUserFromExternalProviderAsync(AuthenticateResult result)
         {
             var externalUser = result.Principal;

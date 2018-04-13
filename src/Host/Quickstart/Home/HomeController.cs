@@ -20,7 +20,22 @@ namespace IdentityServer4.Quickstart.UI
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Sign");
+        }
+
+        public IActionResult Sign()
+        {
+            return View("Sign");
+        }
+
+        public IActionResult SignUp()
+        {
+            return View("SignUp");
+        }
+
+        public IActionResult RoleView()
+        {
+            return View("RoleView");
         }
 
         /// <summary>

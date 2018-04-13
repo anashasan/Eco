@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Host.Data;
 using Host.Models;
 using Host.Configuration;
+using Host.DataContext;
+using Host.Business.IDbServices;
+using Host.Business.DbServices;
 
 namespace Host
 {
@@ -25,9 +28,15 @@ namespace Host
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddDbContext<EcoDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            // services Add 
+            services.AddScoped<IActivityService, ActivityService>();
 
             services.AddMvc();
 

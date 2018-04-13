@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Microsoft.Extensions.Logging;
 
 namespace Eco
 {
@@ -38,6 +37,7 @@ namespace Eco
                 ;
 
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
+
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(connectionString);
@@ -45,6 +45,7 @@ namespace Eco
                 if (_env.IsDevelopment())
                     options.EnableSensitiveDataLogging();
             });
+
 
             services.Configure<ForwardedHeadersOptions>(options =>
             {

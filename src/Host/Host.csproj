@@ -29,4 +29,10 @@
     <ProjectReference Include="..\IdentityServer4.AspNetIdentity\IdentityServer4.AspNetIdentity.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Views\Shared\_Layout.cshtml">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

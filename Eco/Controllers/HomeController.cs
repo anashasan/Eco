@@ -17,7 +17,11 @@ namespace Eco.Controllers
         {
             return View("Sign");
         }
-
+        
+        public IActionResult SignUp()
+        {
+            return View("SignUp");
+        }
 
     }
 }
