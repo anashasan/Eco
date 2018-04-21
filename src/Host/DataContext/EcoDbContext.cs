@@ -6,12 +6,10 @@ namespace Host.DataContext
 {
     public partial class EcoDbContext : DbContext
     {
-
         public EcoDbContext(DbContextOptions<EcoDbContext> options) : base(options)
         {
 
         }
-
         public virtual DbSet<Activity> Activity { get; set; }
         public virtual DbSet<AspNetRoleClaims> AspNetRoleClaims { get; set; }
         public virtual DbSet<AspNetRoles> AspNetRoles { get; set; }
@@ -25,6 +23,8 @@ namespace Host.DataContext
         public virtual DbSet<BranchLocation> BranchLocation { get; set; }
         public virtual DbSet<Company> Company { get; set; }
         public virtual DbSet<CompanyBranch> CompanyBranch { get; set; }
+        public virtual DbSet<EmployeeProfile> EmployeeProfile { get; set; }
+        public virtual DbSet<Gender> Gender { get; set; }
         public virtual DbSet<Location> Location { get; set; }
         public virtual DbSet<Station> Station { get; set; }
         public virtual DbSet<StationActivity> StationActivity { get; set; }
@@ -32,7 +32,6 @@ namespace Host.DataContext
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-          
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -112,6 +111,15 @@ namespace Host.DataContext
                     .HasConstraintName("Fk_BranchLocation_Location_LocationId");
             });
 
+            modelBuilder.Entity<Company>(entity =>
+            {
+                entity.HasOne(d => d.FkUser)
+                    .WithMany(p => p.Company)
+                    .HasForeignKey(d => d.FkUserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FkUser_Company_AspNetUsers_FkUserId");
+            });
+
             modelBuilder.Entity<CompanyBranch>(entity =>
             {
                 entity.HasOne(d => d.FkBranch)
@@ -125,6 +133,26 @@ namespace Host.DataContext
                     .HasForeignKey(d => d.FkCompanyId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("Fk_CompanyBranch_Company_FkCompanyId");
+            });
+
+            modelBuilder.Entity<EmployeeProfile>(entity =>
+            {
+                entity.Property(e => e.CreatedOn).HasDefaultValueSql("(getdate())");
+
+                entity.HasOne(d => d.FkGender)
+                    .WithMany(p => p.EmployeeProfile)
+                    .HasForeignKey(d => d.FkGenderId)
+                    .HasConstraintName("FK__EmployeeProfile_Gender_FkGenderId");
+
+                entity.HasOne(d => d.FkInitiatedBy)
+                    .WithMany(p => p.EmployeeProfileFkInitiatedBy)
+                    .HasForeignKey(d => d.FkInitiatedById)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+
+            modelBuilder.Entity<Gender>(entity =>
+            {
+                entity.Property(e => e.PkGenderId).ValueGeneratedOnAdd();
             });
 
             modelBuilder.Entity<StationActivity>(entity =>

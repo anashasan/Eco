@@ -9,5 +9,8 @@ namespace Host.Business.IDbServices
     public interface IRoleService
     {
         List<RolesModel> GetAllRoles();
+        List<RolesModel> GetAllRolesById(string userId);
+        string GetRoleByName(string roleName);
+        void AddUserRole(string userId, string roleId);
     }
 }

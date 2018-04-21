@@ -24,10 +24,13 @@ using Microsoft.EntityFrameworkCore;
 using Host.Data;
 using Microsoft.AspNetCore.Authorization;
 using Host.Models.AccountViewModels;
+using Host.Controllers;
+using Host.Business.IDbServices;
 
 namespace IdentityServer4.Quickstart.UI
 {
     [SecurityHeaders]
+    [Authorize]
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -37,6 +40,7 @@ namespace IdentityServer4.Quickstart.UI
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IRoleService _roleService;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -45,7 +49,8 @@ namespace IdentityServer4.Quickstart.UI
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IRoleService roleService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -54,6 +59,7 @@ namespace IdentityServer4.Quickstart.UI
             _schemeProvider = schemeProvider;
             _events = events;
             _serviceProvider = serviceProvider;
+            _roleService = roleService;
         }
 
         /// <summary>
@@ -91,14 +97,15 @@ namespace IdentityServer4.Quickstart.UI
                         new Claim(JwtClaimTypes.GivenName, user.UserName),
                         new Claim(JwtClaimTypes.FamilyName, user.UserName),
                         new Claim(JwtClaimTypes.Email, user.Email),
-                        new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
-                        new Claim(JwtClaimTypes.WebSite, "http://alice.com"),
-                        new Claim(JwtClaimTypes.Address, @"{ 'street_address': 'One Hacker Way', 'locality': 'Heidelberg', 'postal_code': 69118, 'country': 'Germany' }", IdentityServer4.IdentityServerConstants.ClaimValueTypes.Json)
+                        new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean)
                     }).Result;
                     if (!result.Succeeded)
                     {
                         throw new Exception(result.Errors.First().Description);
                     }
+                    var roleId = _roleService.GetRoleByName(user.RoleName);
+                    _roleService.AddUserRole(userName.Id, roleId);
+                    
                     Console.WriteLine("User Created");
                 }
                 return View();
@@ -110,34 +117,61 @@ namespace IdentityServer4.Quickstart.UI
         public async Task<IActionResult> CreateRoles(RolesModel rolesModel)
         {
             if (!ModelState.IsValid)
-                return RedirectToAction("Home/SignUp");
+                return RedirectToAction("Role");
             var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
             var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
 
             var roleName = context.Roles
                            .AsNoTracking()
                            .Where(i => i.Name == rolesModel.Name)
-                           .Single();
+                           .SingleOrDefault();
             if(roleName == null)
             {
                 var roles = new IdentityRole
                 {
                     Name = rolesModel.Name,
+                    NormalizedName = rolesModel.NormalizedName
                 };
 
 
                 context.Roles.Add(roles);
                 context.SaveChanges();
-                return RedirectToAction("Home/SignUp");
+                return RedirectToAction("Role");
             }
-            return RedirectToAction("Home/SignUp");
+            return RedirectToAction("Role");
 
         }
 
+        public IActionResult NewHire()
+        {
+            var roleList = _roleService.GetAllRoles();
+            var userInfoModel = new UserInfoModel
+            {
+                Roles = roleList
+            };
+            return View("NewHire", userInfoModel );
+        }
+
+        public IActionResult Role()
+        {
+            var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
+            var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+            var roleModel = _roleService.GetAllRoles();
+ 
+            return View("AdminRole",roleModel);
+        }
+
+        public IActionResult AddRole()
+        {
+            
+            return View("AddRole");
+        }
 
         /// <summary>
         /// Show login page
         /// </summary>
+        /// 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> Login(string returnUrl)
         {
@@ -150,7 +184,7 @@ namespace IdentityServer4.Quickstart.UI
                 return await ExternalLogin(vm.ExternalLoginScheme, returnUrl);
             }
 
-            return View(vm);
+            return RedirectToAction("Sign","Home");
         }
 
         /// <summary>
@@ -158,6 +192,7 @@ namespace IdentityServer4.Quickstart.UI
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginInputModel model, string button)
         {
             //if (button != "login")
@@ -209,7 +244,7 @@ namespace IdentityServer4.Quickstart.UI
 
             // something went wrong, show form with error
             var vm = await BuildLoginViewModelAsync(model);
-            return View(vm);
+            return RedirectToAction("Login");
         }
 
         /// <summary>

@@ -368,7 +368,22 @@
                             <li><a href="pages/layout/boxed.html"><i class="fa fa-circle-o"></i> Company Account</a></li>
 
                         </ul>
+                        <ul class="treeview-menu"></ul>
                     </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-files-o"></i>
+                            <span>Administration</span>
+                            <span class="pull-right-container">
+                                <span class="label label-primary pull-right">4</span>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="@Url.Action("EmployeeProfile","Employee")"><i class="fa fa-circle-o"></i> User Managment</a></li>
+                            <li><a href="@Url.Action("Role","Account")"><i class="fa fa-circle-o"></i>Role Managment</a></li>
+                        </ul>
+                    </li>
+                   
                     <li>
                         <a href="pages/widgets.html">
                             <i class="fa fa-th"></i> <span>Reports</span>
@@ -398,11 +413,11 @@
                         </form>
                         @*@Html.ActionLink("Logout", "Logout", "Account")*@
                         @*<a href="pages/widgets.html">
-                            <i class="fa fa-th"></i> <span>Logout</span>
-                            <span class="pull-right-container">
-                                <small class="label pull-right bg-green">new</small>
-                            </span>
-                        </a>*@
+                <i class="fa fa-th"></i> <span>Logout</span>
+                <span class="pull-right-container">
+                    <small class="label pull-right bg-green">new</small>
+                </span>
+            </a>*@
                     </li>
 
 </section>

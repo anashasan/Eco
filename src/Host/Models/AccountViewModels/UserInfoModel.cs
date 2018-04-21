@@ -15,9 +15,12 @@ namespace Host.Models.AccountViewModels
         public string NormalizeEmail { get; set; }
         public string NormalizeUserName { get; set; }
         public string Password { get; set; }
+        public string ConfrimedPassword { get; set; }
         public string PhoneNumber { get; set; }
         public bool PhoneNumberConfirmed { get; set; }
         public bool TwoFactorEnable { get; set; }
         public string UserName { get; set; }
+        public string RoleName { get; set; }
+        public List<RolesModel> Roles { get; set; }
     }
 }

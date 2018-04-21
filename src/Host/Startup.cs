@@ -37,6 +37,8 @@ namespace Host
 
             // services Add 
             services.AddScoped<IActivityService, ActivityService>();
+            services.AddScoped<ICompanyService, CompanyService>();
+            services.AddScoped<IRoleService, RoleService>();
 
             services.AddMvc();
 

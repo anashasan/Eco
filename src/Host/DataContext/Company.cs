@@ -25,7 +25,13 @@ namespace Host.DataContext
         public DateTime CreatedOn { get; set; }
         [Column("UpdatedON", TypeName = "date")]
         public DateTime? UpdatedOn { get; set; }
+        [Required]
+        [StringLength(450)]
+        public string FkUserId { get; set; }
 
+        [ForeignKey("FkUserId")]
+        [InverseProperty("Company")]
+        public AspNetUsers FkUser { get; set; }
         [InverseProperty("FkCompany")]
         public ICollection<CompanyBranch> CompanyBranch { get; set; }
     }

@@ -2,21 +2,31 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using Host.Business.IDbServices;
+using Host.Controllers;
+using Host.Models;
 using IdentityServer4.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
 namespace IdentityServer4.Quickstart.UI
 {
     [SecurityHeaders]
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
         private readonly IIdentityServerInteractionService _interaction;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IRoleService _roleService;
 
-        public HomeController(IIdentityServerInteractionService interaction)
+        public HomeController(IIdentityServerInteractionService interaction,
+                              UserManager<ApplicationUser> userManager,
+                              IRoleService roleService)
         {
             _interaction = interaction;
+            _userManager = userManager;
+            _roleService = roleService;
         }
 
         public IActionResult Index()
@@ -30,14 +40,22 @@ namespace IdentityServer4.Quickstart.UI
         }
 
         [Authorize]
-        public IActionResult AdminDashboard()
+        public  IActionResult AdminDashboard()
         {
-            return View("AdminDashboard");
+            var userId = GetUserid();
+            var getRoles = _roleService.GetAllRolesById(userId.ToString());
+            return  View("AdminDashboard");
         }
 
         public IActionResult RoleView()
         {
             return View("RoleView");
+        }
+
+        [Authorize]
+        public IActionResult AddCompany()
+        {
+            return View("Company");
         }
 
         /// <summary>
@@ -56,5 +74,7 @@ namespace IdentityServer4.Quickstart.UI
 
             return View("Error", vm);
         }
+
+
     }
 }

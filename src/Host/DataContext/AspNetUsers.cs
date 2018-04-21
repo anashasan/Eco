@@ -12,6 +12,9 @@ namespace Host.DataContext
             AspNetUserClaims = new HashSet<AspNetUserClaims>();
             AspNetUserLogins = new HashSet<AspNetUserLogins>();
             AspNetUserRoles = new HashSet<AspNetUserRoles>();
+            Company = new HashSet<Company>();
+            EmployeeProfileFkInitiatedBy = new HashSet<EmployeeProfile>();
+            EmployeeProfileFkUser = new HashSet<EmployeeProfile>();
         }
 
         public string Id { get; set; }
@@ -40,5 +43,11 @@ namespace Host.DataContext
         public ICollection<AspNetUserLogins> AspNetUserLogins { get; set; }
         [InverseProperty("User")]
         public ICollection<AspNetUserRoles> AspNetUserRoles { get; set; }
+        [InverseProperty("FkUser")]
+        public ICollection<Company> Company { get; set; }
+        [InverseProperty("FkInitiatedBy")]
+        public ICollection<EmployeeProfile> EmployeeProfileFkInitiatedBy { get; set; }
+        [InverseProperty("FkUser")]
+        public ICollection<EmployeeProfile> EmployeeProfileFkUser { get; set; }
     }
 }
